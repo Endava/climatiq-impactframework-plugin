@@ -1,0 +1,32 @@
+name: Climatiq Manifest Example
+description: Example demonstrating use of climatiq-impactframework-plugin
+tags: null
+initialize:
+  plugins:
+    climatiq-plugin:
+      method: ClimatiqCalculator
+      path: climatiq-impactframework-plugin
+      global-config:
+        use-energy-sum: true
+        use-carbon-sum: true
+        include-carbon-emissions: true
+        include-carbon-intensity: true
+  outputs: ['yaml']
+tree:
+  children:
+    child:
+      pipeline:
+        - climatiq-plugin
+      children:    
+        test-memory: #------------------------------------- MEMORY BATCH EXAMPLE
+          inputs:
+            - timestamp: '2024-03-20T00:00:00.000Z'
+              duration: 3600
+              location: eu-central-1
+              cloud/vendor: aws
+              ram-alloc: 64
+            - timestamp: '2024-03-20T00:00:00.000Z'
+              duration: 3600
+              location: eu-west-1
+              cloud/vendor: aws
+              ram-alloc: 128
