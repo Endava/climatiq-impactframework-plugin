@@ -3,6 +3,10 @@ import {ClimatiqCalculator} from '../index';
 import axios from 'axios';
 import {
   mockGlobalConfig,
+  mockGlobalConfigForVMInstance,
+  mockGlobalConfigForCPU,
+  mockGlobalConfigForMemory,
+  mockGlobalConfigForStorage,
   mockVMInstanceParams,
   mockVMInstanceResponseData,
   mockCPUParams,
@@ -28,11 +32,37 @@ describe('ClimatiqCalculator', () => {
   });
 
   describe('execute', () => {
-    it('returns enriched results from valid vm-instance inputs.', async () => {
+    it('throws an error when climatiq API key is missing from env vars.', async () => {
+      delete process.env.CLIMATIQ_API_KEY;
+      const climatiq = ClimatiqCalculator(mockGlobalConfig);
+      const inputs = [mockVMInstanceParams.ValidParam];
+      try {
+        await climatiq.execute(inputs);
+      } catch (error) {
+        expect(error.message).toContain('Climatiq API');
+      }
+    });
+
+    it('returns enriched results from valid vm-instance inputs with no endpoint.', async () => {
+      process.env.CLIMATIQ_API_KEY = 'xxx';
       mockedAxios.post.mockResolvedValue({
         data: mockVMInstanceResponseData,
       });
       const climatiq = ClimatiqCalculator(mockGlobalConfig);
+      expect(climatiq.metadata.kind).toEqual('execute');
+      const inputs = [mockVMInstanceParams.ValidParam];
+      const result = await climatiq.execute(inputs);
+      expect(result.length).toStrictEqual(inputs.length);
+      expect(result[0]).toHaveProperty('energy');
+      expect(result[0]).toHaveProperty('carbon');
+    });
+
+    it('returns enriched results from valid vm-instance inputs.', async () => {
+      process.env.CLIMATIQ_API_KEY = 'xxx';
+      mockedAxios.post.mockResolvedValue({
+        data: mockVMInstanceResponseData,
+      });
+      const climatiq = ClimatiqCalculator(mockGlobalConfigForVMInstance);
       const inputs = [mockVMInstanceParams.ValidParam];
       const result = await climatiq.execute(inputs);
       expect(result.length).toStrictEqual(inputs.length);
@@ -41,10 +71,11 @@ describe('ClimatiqCalculator', () => {
     });
 
     it('returns enriched results from valid CPU inputs.', async () => {
+      process.env.CLIMATIQ_API_KEY = 'xxx';
       mockedAxios.post.mockResolvedValue({
         data: mockCPUResponseData,
       });
-      const climatiq = ClimatiqCalculator(mockGlobalConfig);
+      const climatiq = ClimatiqCalculator(mockGlobalConfigForCPU);
       const inputs = [mockCPUParams.ValidParam];
       const result = await climatiq.execute(inputs);
       expect(result.length).toStrictEqual(inputs.length);
@@ -53,10 +84,11 @@ describe('ClimatiqCalculator', () => {
     });
 
     it('returns enriched results from valid memory inputs.', async () => {
+      process.env.CLIMATIQ_API_KEY = 'xxx';
       mockedAxios.post.mockResolvedValue({
         data: mockMemoryResponseData,
       });
-      const climatiq = ClimatiqCalculator(mockGlobalConfig);
+      const climatiq = ClimatiqCalculator(mockGlobalConfigForMemory);
       const inputs = [mockMemoryParams.ValidParam];
       const result = await climatiq.execute(inputs);
       expect(result.length).toStrictEqual(inputs.length);
@@ -65,10 +97,11 @@ describe('ClimatiqCalculator', () => {
     });
 
     it('returns enriched results from valid storage inputs.', async () => {
+      process.env.CLIMATIQ_API_KEY = 'xxx';
       mockedAxios.post.mockResolvedValue({
         data: mockStorageResponseData,
       });
-      const climatiq = ClimatiqCalculator(mockGlobalConfig);
+      const climatiq = ClimatiqCalculator(mockGlobalConfigForStorage);
       const inputs = [mockStorageParams.ValidParam];
       const result = await climatiq.execute(inputs);
       expect(result.length).toStrictEqual(inputs.length);
@@ -77,6 +110,7 @@ describe('ClimatiqCalculator', () => {
     });
 
     it('calculates the correct grid carbon intensity for known energy and carbon values.', async () => {
+      process.env.CLIMATIQ_API_KEY = 'xxx';
       mockedAxios.post.mockResolvedValue({
         data: mockStorageResponseData_WithHardwiredEnergyAndCarbon,
       });

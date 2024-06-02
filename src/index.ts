@@ -18,6 +18,10 @@ export const ClimatiqCalculator = (
 
   const execute = async (inputs: PluginParams[]): Promise<PluginParams[]> => {
     dotenv.config();
+    if (!process.env.CLIMATIQ_API_KEY) {
+      throw new Error('Climatiq API key missing from env variables');
+    }
+
     switch (globalConfig['endpoint']) {
       case 'vm-instance':
         endpoint = Endpoint.VMInstance;
@@ -26,7 +30,7 @@ export const ClimatiqCalculator = (
         endpoint = Endpoint.CPU;
         break;
       case 'memory':
-        endpoint = Endpoint.CPU;
+        endpoint = Endpoint.Memory;
         break;
       case 'storage':
         endpoint = Endpoint.Storage;

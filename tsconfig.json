@@ -6,7 +6,8 @@
     "rootDir": "./src",                       // Specify the root directory of input files
     "esModuleInterop": true,                  // Enables emit interoperability between CommonJS and ES Modules
     "forceConsistentCasingInFileNames": true,  // Disallow inconsistently-cased references to the same file
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "useUnknownInCatchVariables": false
   },
   "include": [
     "./src/**/*",                              // Include all TypeScript files in src (including .ts, .tsx, and .d.ts files)
