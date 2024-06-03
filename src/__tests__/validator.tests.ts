@@ -7,8 +7,19 @@ import {
   mockMemoryParams,
   mockStorageParams,
 } from '../__mocks__';
+import {Endpoint} from '../types';
 
 describe('Validator', () => {
+  describe('validate', () => {
+    it('returns false when no endpoint set and no valid params found', () => {
+      const params: PluginParams[] = [{test: 'value'}];
+      const validator = Validator();
+      const validationResult = validator.validate(params, Endpoint.None);
+      expect(validationResult.valid).toEqual(false);
+      expect(validationResult.endpoint).toEqual(Endpoint.None);
+    });
+  });
+
   describe('isValidVMRequest', () => {
     it('returns true with a valid set of parameters', () => {
       const params: PluginParams[] = [mockVMInstanceParams.ValidParam];

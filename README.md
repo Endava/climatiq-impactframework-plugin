@@ -146,3 +146,25 @@ tree:
               cpu/energy: 0.019249600000000002
               memory/energy: 0.03057466958938112
 ```
+
+Executing the following command from the project root:
+
+```sh
+npm install
+
+npm run build
+
+npm link
+```
+
+Navigate to the folder with your manifest file and run the following:
+```sh
+npm link climatiq-impactframework-plugin
+```
+
+Go back to the root folder and run your manifest:
+```sh
+ie --manifest ./examples/vm-instance.yml --output ./examples/vm-instance-computed
+```
+
+The results will be saved to a new `yaml` file in `./examples`.
