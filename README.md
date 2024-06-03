@@ -84,10 +84,10 @@ The Climatiq plugin will enrich your inputs with calculations from Climatiq's cl
 
 For all calculations:
 - `carbon-intensity`: Electrical grid carbon intensity in gCO2e/kHw when include-carbon-intensity is true
-- `carbon`: Sum of operational and embodied CO2e emissions in kgCOe2 when use-carbon-sum and include-carbon-intensity are true
+- `carbon`: Sum of operational and embodied CO2e emissions in kgCOe2 when use-carbon-sum and include-carbon-emissions are true
 or
-- `carbon-operational`: Operational CO2e emissions in kgCOe2 when include-carbon-intensity is true
-- `carbon-embodied`: Embodied CO2e emissions in kgCOe2 when include-carbon-intensity is true
+- `carbon-operational`: Operational CO2e emissions in kgCOe2 when include-carbon-emissions is true
+- `carbon-embodied`: Embodied CO2e emissions in kgCOe2 when include-carbon-emissions is true
 
 ### For instance calculations, the following outputs are returned
 - `energy`: Sum of cpu and memory energy consumed in kWh when use-energy-sum is true
