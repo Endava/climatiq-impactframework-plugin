@@ -53,7 +53,7 @@ initialize:
   plugins:
     climatiq-plugin:
       method: ClimatiqCalculator
-      path: climatiq-plugin
+      path: climatiq-impactframework-plugin
       global-config:
         use-energy-sum: false
         use-carbon-sum: true
@@ -113,7 +113,7 @@ tags: null
 initialize:
   plugins:
     climatiq-plugin:
-      path: climatiq-plugin
+      path: climatiq-impactframework-plugin
       method: ClimatiqCalculator
       global-config:
         use-energy-sum: false
