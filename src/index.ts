@@ -16,13 +16,21 @@ export const ClimatiqCalculator = (
     kind: 'execute',
   };
 
-  const execute = async (inputs: PluginParams[]): Promise<PluginParams[]> => {
+  const execute = async (
+    inputs: PluginParams[],
+    config: any
+  ): Promise<PluginParams[]> => {
     dotenv.config();
     if (!process.env.CLIMATIQ_API_KEY) {
       throw new Error('Climatiq API key missing from env variables');
     }
 
-    switch (globalConfig['endpoint']) {
+    const localConfig = {
+      ...globalConfig,
+      ...(config && config['endpoint'] ? {endpoint: config['endpoint']} : {}),
+    };
+
+    switch (localConfig['endpoint']) {
       case 'vm-instance':
         endpoint = Endpoint.VMInstance;
         break;
@@ -52,7 +60,7 @@ export const ClimatiqCalculator = (
 
     if (inputs.length > 0 && validationResult.valid) {
       console.log('Converting inputs');
-      const converter = Converter(globalConfig);
+      const converter = Converter(localConfig);
       const requestBatch: RequestBody[] = converter.toRequestBatch(
         inputs,
         endpoint

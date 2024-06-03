@@ -57,6 +57,21 @@ describe('ClimatiqCalculator', () => {
       expect(result[0]).toHaveProperty('carbon');
     });
 
+    it('overrides global-config endpoint with node-level config endpoint.', async () => {
+      process.env.CLIMATIQ_API_KEY = 'xxx';
+      mockedAxios.post.mockResolvedValue({
+        data: mockVMInstanceResponseData,
+      });
+      const climatiq = ClimatiqCalculator(mockGlobalConfigForStorage);
+      expect(climatiq.metadata.kind).toEqual('execute');
+      const inputs = [mockVMInstanceParams.ValidParam];
+      const config: Record<string, any> = {endpoint: 'vm-instance'};
+      const result = await climatiq.execute(inputs, config);
+      expect(result.length).toStrictEqual(inputs.length);
+      expect(result[0]).toHaveProperty('energy');
+      expect(result[0]).toHaveProperty('carbon');
+    });
+
     it('returns enriched results from valid vm-instance inputs.', async () => {
       process.env.CLIMATIQ_API_KEY = 'xxx';
       mockedAxios.post.mockResolvedValue({
