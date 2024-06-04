@@ -1,9 +1,50 @@
 /* eslint-disable node/no-extraneous-import */
-import {z} from 'zod';
+import {z, ZodIssue} from 'zod';
 /* eslint-disable node/no-extraneous-import */
 import {PluginParams} from './interfaces';
 import {Endpoint} from './types';
 export const Validator = () => {
+  // error messages
+  const ERROR_DURATION_REQUIRED = 'Duration parameter is required';
+  const ERROR_LOCATION_REQUIRED = 'Location parameter is required';
+  const ERROR_INSTANCETYPE_REQUIRED =
+    'Cloud Instance-type (SKU) parameter is required';
+  const ERROR_DURATION_GTZERO = 'Duration parameter must be greater than zero';
+  const ERROR_CPU_REQUIRED = 'CPU Utilisation parameter is required';
+  const ERROR_CPU_RANGE =
+    'CPU utilization must be a percentage between 0 and 100';
+  const ERROR_CLOUDVENDOR_INVALID =
+    'Cloud vendor should be one of aws, azure or gcp';
+  const ERROR_VCPUS_REQUIRED = 'VCPUs allocated parameter is required';
+  const ERROR_VCPUS_GTZERO =
+    'VCPUs allocated parameter should be greater than equal to one';
+  const ERROR_STORAGETYPE_INVALID =
+    'Storage type parameter should be either ssd or hdd';
+  const ERROR_STORAGECAPACITY_REQUIRED =
+    'Storage capacity parameter is required, and should be a number';
+  const ERROR_RAMALLOC_REQUIRED =
+    'RAM Allocation parameter is required, and should be a number';
+
+  const getZodErrorMessages = (error: z.ZodError): String => {
+    const messages = error.issues.map((issue: ZodIssue) => {
+      return issue.message;
+    });
+    return `\n${messages.join('\n')}`;
+  };
+
+  const durationParamValidation = z
+    .number({message: ERROR_DURATION_REQUIRED})
+    .gt(0, {message: ERROR_DURATION_GTZERO});
+
+  const cpuUtilisationParamValidation = z
+    .number({message: ERROR_CPU_REQUIRED})
+    .gte(0, {message: ERROR_CPU_RANGE})
+    .lte(100, {message: ERROR_CPU_RANGE});
+
+  const vendorParamValidation = z.enum(['azure', 'aws', 'gcp'], {
+    message: ERROR_CLOUDVENDOR_INVALID,
+  });
+
   /** Validates input params for given endpoint, or attempts to match params if endpoint not specified */
   const validate = (
     inputs: PluginParams[],
@@ -33,11 +74,11 @@ export const Validator = () => {
   ): boolean => {
     const schema = z.object({
       timestamp: z.coerce.date(),
-      duration: z.number().gt(0),
-      location: z.string(),
-      'cloud/vendor': z.enum(['azure', 'aws', 'gcp']),
-      'cloud/instance-type': z.string().min(3),
-      'cpu/utilization': z.number().gte(0).lte(100),
+      duration: durationParamValidation,
+      location: z.string({message: ERROR_LOCATION_REQUIRED}),
+      'cloud/vendor': vendorParamValidation,
+      'cloud/instance-type': z.string({message: ERROR_INSTANCETYPE_REQUIRED}),
+      'cpu/utilization': cpuUtilisationParamValidation,
     });
 
     for (const input of inputs) {
@@ -45,7 +86,9 @@ export const Validator = () => {
       if (!result.success) {
         if (!throwError) return false;
         throw new Error(
-          `Invalid VM Instance request params - ${result.error.message}`
+          `Invalid VM Instance request params - ${getZodErrorMessages(
+            result.error
+          )}`
         );
       }
     }
@@ -60,18 +103,22 @@ export const Validator = () => {
   ): boolean => {
     const schema = z.object({
       timestamp: z.coerce.date(),
-      duration: z.number().gt(0),
-      location: z.string(),
-      'cloud/vendor': z.enum(['azure', 'aws', 'gcp']),
-      'vcpus-allocated': z.number().gte(1),
-      'cpu/utilization': z.number().gte(0).lte(100),
+      duration: durationParamValidation,
+      location: z.string({message: ERROR_LOCATION_REQUIRED}),
+      'cloud/vendor': vendorParamValidation,
+      'vcpus-allocated': z
+        .number({message: ERROR_VCPUS_REQUIRED})
+        .gte(1, {message: ERROR_VCPUS_GTZERO}),
+      'cpu/utilization': cpuUtilisationParamValidation,
     });
 
     for (const input of inputs) {
       const result = schema.safeParse(input);
       if (!result.success) {
         if (!throwError) return false;
-        throw new Error(`Invalid CPU request params - ${result.error.message}`);
+        throw new Error(
+          `Invalid CPU request params - ${getZodErrorMessages(result.error)}`
+        );
       }
     }
 
@@ -85,10 +132,10 @@ export const Validator = () => {
   ): boolean => {
     const schema = z.object({
       timestamp: z.coerce.date(),
-      duration: z.number().gt(0),
-      location: z.string(),
-      'cloud/vendor': z.enum(['azure', 'aws', 'gcp']),
-      'ram-alloc': z.number(),
+      duration: durationParamValidation,
+      location: z.string({message: ERROR_LOCATION_REQUIRED}),
+      'cloud/vendor': vendorParamValidation,
+      'ram-alloc': z.number({message: ERROR_RAMALLOC_REQUIRED}),
     });
 
     for (const input of inputs) {
@@ -96,7 +143,7 @@ export const Validator = () => {
       if (!result.success) {
         if (!throwError) return false;
         throw new Error(
-          `Invalid Memory request params - ${result.error.message}`
+          `Invalid Memory request params - ${getZodErrorMessages(result.error)}`
         );
       }
     }
@@ -111,11 +158,13 @@ export const Validator = () => {
   ): boolean => {
     const schema = z.object({
       timestamp: z.coerce.date(),
-      duration: z.number().gt(0),
-      location: z.string(),
-      'cloud/vendor': z.enum(['azure', 'aws', 'gcp']),
-      'storage/type': z.enum(['ssd', 'hdd']),
-      'storage/capacity': z.number(),
+      duration: durationParamValidation,
+      location: z.string({message: ERROR_LOCATION_REQUIRED}),
+      'cloud/vendor': vendorParamValidation,
+      'storage/type': z.enum(['ssd', 'hdd'], {
+        message: ERROR_STORAGETYPE_INVALID,
+      }),
+      'storage/capacity': z.number({message: ERROR_STORAGECAPACITY_REQUIRED}),
     });
 
     for (const input of inputs) {
@@ -123,7 +172,9 @@ export const Validator = () => {
       if (!result.success) {
         if (!throwError) return false;
         throw new Error(
-          `Invalid Storage request params - ${result.error.message}`
+          `Invalid Storage request params - ${getZodErrorMessages(
+            result.error
+          )}`
         );
       }
     }

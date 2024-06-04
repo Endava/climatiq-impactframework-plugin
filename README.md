@@ -147,6 +147,12 @@ tree:
               memory/energy: 0.03057466958938112
 ```
 
+## Error Handling
+- The plugin performs config validation using the zod library and will throw errors if config values are invalid e.g. endpoint type.
+- The plugin performs input validation using the zod library and will throw errors if required parameters are missing, or the provided parameters are invalid.
+- The plugin requires a Climatiq API key from .env vars. The plugin will return an error if the key/value is missing, or the API's HTTP error if the credential is invalid.
+- If the Climatiq endpoint is specified in global config or node config and the parameters given are invalid, the plugin will return a validation error.  If the endpoint is not specified, the plugin will attempt to infer it from the parameters, and will exit without error if invalid.
+
 Executing the following command from the project root:
 
 ```sh
