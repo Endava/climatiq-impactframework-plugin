@@ -39,9 +39,22 @@ permissions:
   pull-requests: read # allows SonarCloud to decorate PRs with analysis results
 
 jobs:
-  Analysis:
-    runs-on: ubuntu-latest
 
+  Test Coverage:
+    name: SonarCloud
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0 
+      - name: Install dependencies
+        run: npm
+      - name: Test and coverage
+        run: npm run coverage
+
+  Analysis:
+    name: SonarCloud Analysis
+    runs-on: ubuntu-latest
     steps:
       - name: Analyze with SonarCloud
 
