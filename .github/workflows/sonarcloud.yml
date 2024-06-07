@@ -40,8 +40,8 @@ permissions:
 
 jobs:
 
-  Test Coverage:
-    name: SonarCloud
+  Coverage:
+    name: Test Coverage
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
