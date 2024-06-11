@@ -139,8 +139,8 @@ export const Converter = (config: YourGlobalConfig) => {
       ...cpuParam,
       ...memoryParam,
     };
-    cpuEnergy = cpuEnergy ? cpuEnergy : 0;
-    memoryEnergy = memoryEnergy ? memoryEnergy : 0;
+    cpuEnergy ??= 0;
+    memoryEnergy ??= 0;
     return useEnergySum ? {energy: cpuEnergy + memoryEnergy} : componentParams;
   };
 
@@ -160,7 +160,7 @@ export const Converter = (config: YourGlobalConfig) => {
       ...operationalParam,
       ...embodiedParam,
     };
-    embodiedEmissions = embodiedEmissions ? embodiedEmissions : 0;
+    embodiedEmissions ??= 0;
 
     return useCarbonSum
       ? {carbon: operatingEmissions + embodiedEmissions}
@@ -215,8 +215,8 @@ export const Converter = (config: YourGlobalConfig) => {
 
       return {
         ...input,
-        ...getEnergyOutputParams(cpuEnergy, undefined),
-        ...getEmissionOutputParams(operatingEmissions, undefined),
+        ...getEnergyOutputParams(cpuEnergy),
+        ...getEmissionOutputParams(operatingEmissions),
         ...getCarbonIntensityParam(operatingEmissions, cpuEnergy),
       };
     });
@@ -237,7 +237,7 @@ export const Converter = (config: YourGlobalConfig) => {
       return {
         ...input,
         ...getEnergyOutputParams(undefined, memoryEnergy),
-        ...getEmissionOutputParams(operatingEmissions, undefined),
+        ...getEmissionOutputParams(operatingEmissions),
         ...getCarbonIntensityParam(operatingEmissions, memoryEnergy),
       };
     });
@@ -258,7 +258,7 @@ export const Converter = (config: YourGlobalConfig) => {
       return {
         ...input,
         energy: energy,
-        ...getEmissionOutputParams(operatingEmissions, undefined),
+        ...getEmissionOutputParams(operatingEmissions),
         ...getCarbonIntensityParam(operatingEmissions, energy),
       };
     });
