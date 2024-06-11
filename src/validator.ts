@@ -25,7 +25,7 @@ export const Validator = () => {
   const ERROR_RAMALLOC_REQUIRED =
     'RAM Allocation parameter is required, and should be a number';
 
-  const getZodErrorMessages = (error: z.ZodError): String => {
+  const getZodErrorMessages = (error: z.ZodError): string => {
     const messages = error.issues.map((issue: ZodIssue) => {
       return issue.message;
     });
