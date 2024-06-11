@@ -128,6 +128,51 @@ export const Converter = (config: YourGlobalConfig) => {
     return inputs;
   };
 
+  /** Returns summed or component parameters for cpu and/or memory energy */
+  const getEnergyOutputParams = (
+    cpuEnergy?: number,
+    memoryEnergy?: number
+  ): any => {
+    const cpuParam = cpuEnergy ? {'cpu/energy': cpuEnergy} : {};
+    const memoryParam = memoryEnergy ? {'memory/energy': memoryEnergy} : {};
+    const componentParams = {
+      ...cpuParam,
+      ...memoryParam,
+    };
+    cpuEnergy = cpuEnergy ? cpuEnergy : 0;
+    memoryEnergy = memoryEnergy ? memoryEnergy : 0;
+    return useEnergySum ? {energy: cpuEnergy + memoryEnergy} : componentParams;
+  };
+
+  /** Returns summed or component parameters for operational and embodied emissions */
+  const getEmissionOutputParams = (
+    operatingEmissions: number,
+    embodiedEmissions?: number
+  ): any => {
+    if (!includeCarbonEmissions) return {};
+
+    const operationalParam = {'carbon-operational': operatingEmissions};
+    const embodiedParam = embodiedEmissions
+      ? {'carbon-embodied': embodiedEmissions}
+      : {};
+
+    const componentParams = {
+      ...operationalParam,
+      ...embodiedParam,
+    };
+    embodiedEmissions = embodiedEmissions ? embodiedEmissions : 0;
+
+    return useCarbonSum
+      ? {carbon: operatingEmissions + embodiedEmissions}
+      : componentParams;
+  };
+
+  /** Returns carbon intensity parameter for given electical energy */
+  const getCarbonIntensityParam = (kgCO2e: number, energyKW: number): any => {
+    if (!includeCarbonIntensity) return {};
+    return {'carbon-intensity': (kgCO2e / energyKW) * 1000};
+  };
+
   /** Returns enriched output array based on input plugin params and VMInstance batch results */
   const getVMInstanceOutputs = (
     inputs: PluginParams[],
@@ -137,35 +182,21 @@ export const Converter = (config: YourGlobalConfig) => {
       const result = response.results[index];
 
       if (result.error) throw new Error(`Climatiq - ${result.message}`);
-
-      const cpu_energy: number = result.calculation_details.energy_used_cpu;
-      const memory_energy: number =
+      const cpuEnergy: number = result.calculation_details.energy_used_cpu;
+      const memoryEnergy: number =
         result.calculation_details.energy_used_memory;
-      const energy: number = cpu_energy + memory_energy;
       const operatingEmissions =
         result.memory_estimate.co2e + result.cpu_estimate.co2e;
       const embodiedEmissions = result.embodied_cpu_estimate.co2e;
-      const carbonIntensity = getGridCarbonIntensity(
-        operatingEmissions,
-        energy
-      );
 
       return {
         ...input,
-        ...(useEnergySum
-          ? {energy: energy}
-          : {'cpu/energy': cpu_energy, 'memory/energy': memory_energy}),
-        ...(includeCarbonEmissions
-          ? useCarbonSum
-            ? {carbon: result.total_co2e}
-            : {
-                'carbon-operational': operatingEmissions,
-                'carbon-embodied': embodiedEmissions,
-              }
-          : {}),
-        ...(includeCarbonIntensity
-          ? {'carbon-intensity': carbonIntensity}
-          : {}),
+        ...getEnergyOutputParams(cpuEnergy, memoryEnergy),
+        ...getEmissionOutputParams(operatingEmissions, embodiedEmissions),
+        ...getCarbonIntensityParam(
+          operatingEmissions,
+          cpuEnergy + memoryEnergy
+        ),
       };
     });
   };
@@ -179,26 +210,14 @@ export const Converter = (config: YourGlobalConfig) => {
       const result = response.results[index];
 
       if (result.error) throw new Error(`Climatiq - ${result.message}`);
-
-      const cpu_energy: number = result.activity_data.activity_value;
-      const energy: number = cpu_energy;
+      const cpuEnergy: number = result.activity_data.activity_value;
       const operatingEmissions = result.co2e;
-      const carbonIntensity = getGridCarbonIntensity(
-        operatingEmissions,
-        energy
-      );
 
       return {
         ...input,
-        ...(useEnergySum ? {energy: energy} : {'cpu/energy': energy}),
-        ...(includeCarbonEmissions
-          ? useCarbonSum
-            ? {carbon: operatingEmissions}
-            : {'carbon-operational': operatingEmissions}
-          : {}),
-        ...(includeCarbonIntensity
-          ? {'carbon-intensity': carbonIntensity}
-          : {}),
+        ...getEnergyOutputParams(cpuEnergy, undefined),
+        ...getEmissionOutputParams(operatingEmissions, undefined),
+        ...getCarbonIntensityParam(operatingEmissions, cpuEnergy),
       };
     });
   };
@@ -212,26 +231,14 @@ export const Converter = (config: YourGlobalConfig) => {
       const result = response.results[index];
 
       if (result.error) throw new Error(`Climatiq - ${result.message}`);
-
-      const memory_energy: number = result.activity_data.activity_value;
-      const energy: number = memory_energy;
+      const memoryEnergy: number = result.activity_data.activity_value;
       const operatingEmissions = result.co2e;
-      const carbonIntensity = getGridCarbonIntensity(
-        operatingEmissions,
-        energy
-      );
 
       return {
         ...input,
-        ...(useEnergySum ? {energy: energy} : {'memory/energy': memory_energy}),
-        ...(includeCarbonEmissions
-          ? useCarbonSum
-            ? {carbon: operatingEmissions}
-            : {'carbon-operational': operatingEmissions}
-          : {}),
-        ...(includeCarbonIntensity
-          ? {'carbon-intensity': carbonIntensity}
-          : {}),
+        ...getEnergyOutputParams(undefined, memoryEnergy),
+        ...getEmissionOutputParams(operatingEmissions, undefined),
+        ...getCarbonIntensityParam(operatingEmissions, memoryEnergy),
       };
     });
   };
@@ -245,32 +252,16 @@ export const Converter = (config: YourGlobalConfig) => {
       const result = response.results[index];
 
       if (result.error) throw new Error(`Climatiq - ${result.message}`);
-
       const energy: number = result.activity_data.activity_value;
       const operatingEmissions = result.co2e;
-      const carbonIntensity = getGridCarbonIntensity(
-        operatingEmissions,
-        energy
-      );
 
       return {
         ...input,
         energy: energy,
-        ...(includeCarbonEmissions
-          ? useCarbonSum
-            ? {carbon: operatingEmissions}
-            : {'carbon-operational': operatingEmissions}
-          : {}),
-        ...(includeCarbonIntensity
-          ? {'carbon-intensity': carbonIntensity}
-          : {}),
+        ...getEmissionOutputParams(operatingEmissions, undefined),
+        ...getCarbonIntensityParam(operatingEmissions, energy),
       };
     });
-  };
-
-  /** Calculates the carbon intensity of the given electical energy */
-  const getGridCarbonIntensity = (kgCO2e: number, energyKW: number): number => {
-    return (kgCO2e / energyKW) * 1000;
   };
 
   return {
